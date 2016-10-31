@@ -1,0 +1,353 @@
+/*
+  Ileana Anahi Topete Morales
+  Codificador Convolucional
+*/
+
+/*
+  Los bits 0 son los encendidos (escribí cada posicion en base 1)
+    --5--
+    |   |
+    4   13
+    |   |
+    --11--
+    |   |
+    7   10
+    |   |
+    --8--  .9
+*/
+//basado en diagama de conexion en un display de 7 segmentos
+int segA = 5;  //   -
+int segB = 13; 
+int segC = 10; 
+int segD = 8;  
+int segE = 7;  
+int segF = 4;  
+int segG = 11; 
+int segPt = 9; 
+
+
+//arreglo de lectura
+int val[4];
+//arreglo para corrimiento
+int secIn[3];
+//arreglo de salida sec codificada
+int secOut[4];
+
+//display digit
+int d1 = 6;   
+int d2 = 3;   
+int d3 = 2;   
+int d4 = 12;  
+
+int delayTime = 5000;
+
+int sec=0;
+int i = 0, j = 0;
+int cont = 3;
+int contOut = 0;
+int bandfirst = 1;
+
+//pines de output
+int oPin[] = {2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13};
+
+//declaracion de pines para display y switch dip
+void setup() {
+
+  //display 7 segmentos
+  for (i = 0; i < sizeof(oPin); i++) {
+    pinMode(oPin[i], OUTPUT);
+  }
+
+  //switch DIP
+  pinMode(A0, INPUT_PULLUP);
+  pinMode(A1, INPUT);
+  pinMode(A2, INPUT);
+  pinMode(A3, INPUT);
+
+  //inicializa cuadritos en 0
+  for (i = 0; i < 3; i++) {
+    secIn[i] = 0;
+  }
+  //Serial.begin(9600);
+}
+
+
+
+//principal
+void loop() {
+
+
+  val[0] = digitalRead(A0);
+  val[1] = digitalRead(A1);
+  val[2] = digitalRead(A2);
+  val[3] = digitalRead(A3);
+
+//for(i=0;i<4;i++)
+//    Serial.print(val[i]);
+//  Serial.print(" ");
+//  delay(1000);
+
+  cont = 3;
+  contOut = 0;
+  //iteraciones
+  while (cont > 0) {
+    for (i = 0; i < 3; i++) {
+      if (i != 2) { //los primeros se recorren
+        secIn[i] = secIn[i + 1];
+      }
+      else { //el ultimo se asigna del dato
+        secIn[i] = val[cont];
+        cont--;
+      }
+    }
+    if (contOut == 4) {
+      for (j = 0; j < 2; j++) {
+        secOut[j] = secOut[j + 2];
+      }
+      contOut = 2;
+    }
+
+    if ((secIn[2] == 0 && secIn[1] == 0) || (secIn[2] == 1 && secIn[1] == 1)) {
+      secOut[contOut] = 0;
+      contOut++;
+    }
+    else {
+      secOut[contOut] = 1;
+      contOut++;
+    }
+
+    if ((secIn[2] == 0 && secIn[0] == 0) || (secIn[2] == 1 && secIn[0] == 1)) {
+      secOut[contOut] = 0;
+      contOut++;
+    }
+    else {
+      secOut[contOut] = 1;
+      contOut++;
+    }
+
+    //mostrando resultados
+    if (bandfirst == 1) {
+      imprimirN(0,0,secOut[0],secOut[1]);   
+      bandfirst = 0;
+    }
+    else {
+      all(11);
+      imprimirN(secOut[3],secOut[2],secOut[1],secOut[0]);
+    }
+
+    
+  }
+
+
+all(9);
+}
+
+void imprimirN(int a,int b,int c,int d){
+    codificador(1,a);
+    codificador(2,b);
+    codificador(3,c);
+    codificador(4,d);
+}
+
+void codificador(int d, int l) {
+  switch (d) { // choose a digit
+    case 0:
+      digitalWrite(d1, LOW); //case 0 - All ON
+      digitalWrite(d2, LOW);
+      digitalWrite(d3, LOW);
+      digitalWrite(d4, LOW);
+      break;
+    case 1:
+      digitalWrite(d1, LOW);//case 1 - Digit Number 1
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, HIGH);
+      break;
+    case 2:
+      digitalWrite(d1, HIGH);//case 1 - Digit Number 2
+      digitalWrite(d2, LOW);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, HIGH);
+      break;
+    case 3:
+      digitalWrite(d1, HIGH);//case 1 - Digit Number 3
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, LOW);
+      digitalWrite(d4, HIGH);
+      break;
+    case 4:
+      digitalWrite(d1, HIGH);//case 1 - Digit Number 4
+      digitalWrite(d2, HIGH);
+      digitalWrite(d3, HIGH);
+      digitalWrite(d4, LOW);
+      break;
+  }
+ switch (l) { // choose a Number
+    case 0: cero();
+            break;
+    case 1: uno();
+            break;
+    case 2: two();
+            break;
+    case 3: three();
+            break;
+    case 4: four();
+            break;
+    case 5: five();
+            break;
+    case 6: six();
+            break;
+    case 7: seven();
+            break;
+    case 8: eight();
+            break;
+    case 9: nine();
+            break;
+    case 10: point(); // print a Point
+            break;
+    case 11: none(); // make all them off !
+            break;
+  }
+
+  delayMicroseconds(delayTime);
+  // delayTime para que se muestre bien el numero
+
+}
+
+
+void all(int n) {
+  codificador(0, n);
+}
+
+// mostrar cero
+void cero() {
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, HIGH);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, LOW);
+  digitalWrite(segPt, LOW);
+}
+//mostrar uno
+void uno() {
+  digitalWrite(segA, LOW);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, LOW);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void two(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, LOW);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, HIGH);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void three(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void four(){
+  digitalWrite(segA, LOW);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void five(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, LOW);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void six(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, LOW);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, HIGH);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void seven(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, LOW);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void eight(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, HIGH);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void nine(){
+  digitalWrite(segA, HIGH);
+  digitalWrite(segB, HIGH);
+  digitalWrite(segC, HIGH);
+  digitalWrite(segD, HIGH);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, HIGH);
+  digitalWrite(segG, HIGH);
+  digitalWrite(segPt, LOW);
+}
+//=============================================//
+void point(){
+  digitalWrite(segA, LOW);
+  digitalWrite(segB, LOW);
+  digitalWrite(segC, LOW);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, LOW);
+  digitalWrite(segPt, HIGH);
+}
+//=============================================//
+void none(){
+  digitalWrite(segA, LOW);
+  digitalWrite(segB, LOW);
+  digitalWrite(segC, LOW);
+  digitalWrite(segD, LOW);
+  digitalWrite(segE, LOW);
+  digitalWrite(segF, LOW);
+  digitalWrite(segG, LOW);
+  digitalWrite(segPt, LOW);
+}
